@@ -42,6 +42,32 @@ export default function App() {
     }
   }, []);
 
+  // Detect ?l=<encrypted_token> in URL and forward to API
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const encryptedToken = params.get('l');
+
+    if (encryptedToken) {
+      console.log('[FinTrack] Detected encrypted token in URL, forwarding to API...');
+
+      fetch(`/api/webhook?l=${encodeURIComponent(encryptedToken)}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success) {
+            console.log('[FinTrack] Data ingested via encrypted URL:', json.data);
+            // Clean URL (remove ?l= param)
+            window.history.replaceState({}, '', window.location.pathname);
+            fetchData(true);
+          } else {
+            console.error('[FinTrack] Ingest failed:', json.message, json.errors);
+          }
+        })
+        .catch((err) => {
+          console.error('[FinTrack] Failed to forward encrypted token:', err);
+        });
+    }
+  }, []);
+
   // Initial load + polling
   useEffect(() => {
     fetchData(true);
@@ -177,10 +203,10 @@ export default function App() {
             </div>
             <h2 className="text-xl font-semibold text-text-primary mb-2">Menunggu Data</h2>
             <p className="text-text-muted max-w-md mx-auto mb-4">
-              Dashboard akan otomatis menampilkan data ketika payload diterima melalui API endpoint.
+              Dashboard akan otomatis menampilkan data ketika payload diterima melalui URL terenkripsi.
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-surface-secondary rounded-2xl text-sm">
-              <code className="font-mono text-primary-600 text-xs">POST /api/webhook</code>
+              <code className="font-mono text-primary-600 text-xs">/?l=&lt;encrypted_token&gt;</code>
             </div>
           </div>
         )}
@@ -194,7 +220,7 @@ export default function App() {
               FinTrack © {new Date().getFullYear()} — Dashboard keuangan real-time
             </p>
             <p className="text-xs text-text-muted font-mono">
-              API: <span className="text-primary-500">POST /api/webhook</span>
+              Ingest: <span className="text-primary-500">/?l=&lt;encrypted&gt;</span>
             </p>
           </div>
         </div>

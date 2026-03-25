@@ -7,8 +7,10 @@
     "dev": "vite",
     "server": "node server.js",
     "build": "vite build",
+    "vercel-build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-url": "node tools/generate-url.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
